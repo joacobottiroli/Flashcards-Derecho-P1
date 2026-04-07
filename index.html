@@ -79,7 +79,10 @@ h1{font-size:20px;font-weight:600;margin-bottom:4px}
 </div>
 <div class="bottom-row">
 <span style="font-size:12px;color:#999">Calificá desde el reverso · Espacio para voltear</span>
+<div style="display:flex;gap:8px">
+<button class="shuffle-btn" id="btn-reset" style="color:#C62828;border-color:#EF9A9A">Resetear progreso</button>
 <button class="shuffle-btn" id="btn-shuffle">Mezclar</button>
+</div>
 </div>
 <div class="kbd">← → navegar · 1 / 2 / 3 calificar</div>
 
@@ -201,7 +204,10 @@ let cards=[...ALL];
 let idx=0,flipped=false,topicFilter="Todos";
 // ratings: Map<key, 1|2|3>
 // Pesos: sin calificar=4, 1(nada)=7, 2(más o menos)=3, 3(excelente)=1
-const ratings=new Map();
+const STORAGE_KEY="derecho_ratings_v1";
+function loadRatings(){try{const s=localStorage.getItem(STORAGE_KEY);if(s)return new Map(JSON.parse(s));}catch(e){}return new Map();}
+function saveRatings(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify([...ratings]));}catch(e){}}
+const ratings=loadRatings();
 const WEIGHTS={undefined:4,1:7,2:3,3:1};
 const LABELS={1:"1 — Nada",2:"2 — Más o menos",3:"3 — Excelente"};
 const RBADGE={1:"rb-1",2:"rb-2",3:"rb-3"};
@@ -304,6 +310,7 @@ const filtered=getFiltered();
 if(!filtered.length)return;
 const c=filtered[idx];
 ratings.set(key(c),n);
+saveRatings();
 // avanzar a siguiente carta con peso aleatorio
 const nextIdx=weightedNext(filtered,idx);
 idx=nextIdx;
@@ -318,6 +325,9 @@ const nextIdx=weightedNext(f,idx);
 idx=nextIdx;flipped=false;render();
 };
 document.getElementById("btn-shuffle").onclick=()=>{shuffle(cards);idx=0;flipped=false;render();};
+document.getElementById("btn-reset").onclick=()=>{
+if(confirm("¿Borrar todo el progreso guardado?")){{ratings.clear();saveRatings();idx=0;flipped=false;render();}}
+};
 
 document.addEventListener("keydown",e=>{
 if(e.key==="ArrowRight"){const f=getFiltered();idx=weightedNext(f,idx);flipped=false;render();}
