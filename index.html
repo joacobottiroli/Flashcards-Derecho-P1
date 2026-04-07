@@ -9,58 +9,79 @@
 body{font-family:system-ui,-apple-system,sans-serif;background:#f8f7f4;color:#1a1a18;padding:1rem}
 h1{font-size:20px;font-weight:600;margin-bottom:4px}
 .sub{font-size:13px;color:#666;margin-bottom:1rem}
-.progress-bar{height:4px;background:#ddd;border-radius:2px;margin:10px 0 1rem;overflow:hidden}
-.progress-fill{height:100%;background:#BA7517;border-radius:2px;transition:width .4s}
+.progress-bar{height:4px;background:#ddd;border-radius:2px;margin:10px 0 .75rem;overflow:hidden}
+.progress-fill{height:100%;background:#3B6D11;border-radius:2px;transition:width .4s}
+.legend{display:flex;gap:12px;margin-bottom:1rem;font-size:12px;color:#666}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.dot-1{background:#C62828}.dot-2{background:#E65100}.dot-3{background:#2E7D32}.dot-0{background:#bbb}
 .filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem}
 .filter-btn{font-size:12px;padding:4px 10px;border:1px solid #ccc;border-radius:20px;background:#fff;color:#555;cursor:pointer;transition:all .15s}
 .filter-btn.active{background:#BA7517;border-color:#BA7517;color:#fff}
-.stats{display:flex;gap:16px;margin-bottom:1rem;font-size:13px;color:#666}
-.stats b{color:#1a1a18}
-.scene{perspective:900px;width:100%;min-height:240px;cursor:pointer;margin-bottom:1rem}
-.card{width:100%;min-height:240px;position:relative;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.4,0,.2,1)}
+.scene{perspective:900px;width:100%;min-height:260px;cursor:pointer;margin-bottom:1rem}
+.card{width:100%;min-height:260px;position:relative;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.4,0,.2,1)}
 .card.flipped{transform:rotateY(180deg)}
-.face{position:absolute;width:100%;min-height:240px;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid #e0ddd6;border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;background:#fff}
+.face{position:absolute;width:100%;min-height:260px;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid #e0ddd6;border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;background:#fff}
 .back{transform:rotateY(180deg)}
-.tag{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;width:fit-content;margin-bottom:.75rem}
+.face-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+.tag{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.rating-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+.rb-1{background:#FFEBEE;color:#C62828}.rb-2{background:#FFF3E0;color:#E65100}.rb-3{background:#E8F5E9;color:#2E7D32}
 .q-label{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
 .q-text{font-size:17px;font-weight:500;color:#1a1a18;line-height:1.55;flex:1}
-.flip-hint{font-size:11px;color:#aaa;margin-top:auto;padding-top:.75rem}
+.flip-hint{font-size:11px;color:#aaa;margin-top:auto;padding-top:.75rem;text-align:center}
 .a-label{font-size:11px;color:#BA7517;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;font-weight:600}
-.a-text{font-size:14px;color:#1a1a18;line-height:1.65;flex:1;white-space:pre-line}
-.nav{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:1rem}
+.a-text{font-size:14px;color:#1a1a18;line-height:1.65;white-space:pre-line;margin-bottom:1rem}
+.rating-section{margin-top:auto;border-top:1px solid #f0efe8;padding-top:.85rem}
+.rating-label{font-size:11px;color:#999;text-align:center;margin-bottom:.5rem}
+.rating-btns{display:flex;gap:8px}
+.r-btn{flex:1;padding:8px 4px;border:1px solid;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center}
+.r-btn:active{transform:scale(.96)}
+.r1{background:#FFEBEE;border-color:#EF9A9A;color:#C62828}
+.r1:hover{background:#FFCDD2}
+.r1.active-r{background:#C62828;color:#fff;border-color:#C62828}
+.r2{background:#FFF3E0;border-color:#FFCC80;color:#E65100}
+.r2:hover{background:#FFE0B2}
+.r2.active-r{background:#E65100;color:#fff;border-color:#E65100}
+.r3{background:#E8F5E9;border-color:#A5D6A7;color:#2E7D32}
+.r3:hover{background:#C8E6C9}
+.r3.active-r{background:#2E7D32;color:#fff;border-color:#2E7D32}
+.nav{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:.75rem}
 .nav-btn{padding:7px 18px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#1a1a18;font-size:13px;cursor:pointer}
 .nav-btn:hover{background:#f0efe8}
 .nav-btn:disabled{opacity:.3;cursor:default}
 .nav-ctr{font-size:13px;color:#666}
-.actions{display:flex;gap:8px;justify-content:flex-end}
-.mark-btn{padding:7px 16px;border:1px solid #ccc;border-radius:8px;font-size:13px;cursor:pointer;background:#fff;color:#555}
-.mark-btn.known{background:#EAF3DE;border-color:#639922;color:#27500A;font-weight:500}
+.bottom-row{display:flex;gap:8px;justify-content:space-between;align-items:center}
 .shuffle-btn{padding:7px 14px;border:1px solid #ccc;border-radius:8px;font-size:13px;cursor:pointer;background:#fff;color:#555}
 .empty{text-align:center;padding:3rem;color:#999;font-size:14px}
 .kbd{font-size:11px;color:#bbb;text-align:center;margin-top:.75rem}
+.stats-row{display:flex;gap:12px;font-size:12px;color:#666;flex-wrap:wrap}
+.stats-row span b{color:#1a1a18}
 </style>
 </head>
 <body>
 <h1>Flashcards — Derecho</h1>
-<div class="sub">Hacé clic en la carta para ver la respuesta · Teclas: ← → y Espacio</div>
+<div class="sub">Clic para voltear · Calificá cada carta para que las difíciles aparezcan más seguido</div>
 <div class="filters" id="filters"></div>
-<div class="stats">
-<span>Mostrando: <b id="st-showing">0</b></span>
-<span>Sabidas: <b id="st-known">0</b></span>
-<span>Restantes: <b id="st-remain">0</b></span>
+<div class="stats-row">
+<span><span class="dot dot-0"></span>Sin calificar: <b id="st-0">0</b></span>
+<span><span class="dot dot-1"></span>Nada: <b id="st-1">0</b></span>
+<span><span class="dot dot-2"></span>Más o menos: <b id="st-2">0</b></span>
+<span><span class="dot dot-3"></span>Excelente: <b id="st-3">0</b></span>
+<span>Total: <b id="st-total">0</b></span>
 </div>
 <div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+<div class="legend"><span><span class="dot dot-3"></span>Progreso (excelentes)</span></div>
 <div id="card-area"></div>
 <div class="nav">
 <button class="nav-btn" id="btn-prev">← Anterior</button>
 <span class="nav-ctr" id="nav-ctr"></span>
 <button class="nav-btn" id="btn-next">Siguiente →</button>
 </div>
-<div class="actions">
-<button class="mark-btn" id="btn-mark">Marcar como sabida</button>
+<div class="bottom-row">
+<span style="font-size:12px;color:#999">Calificá desde el reverso · Espacio para voltear</span>
 <button class="shuffle-btn" id="btn-shuffle">Mezclar</button>
 </div>
-<div class="kbd">Flechas para navegar · Espacio para voltear</div>
+<div class="kbd">← → navegar · 1 / 2 / 3 calificar</div>
 
 <script>
 const TOPICS={
@@ -177,16 +198,35 @@ const ALL=[
 ];
 
 let cards=[...ALL];
-let idx=0,flipped=false,known=new Set(),topicFilter="Todos";
+let idx=0,flipped=false,topicFilter="Todos";
+// ratings: Map<key, 1|2|3>
+// Pesos: sin calificar=4, 1(nada)=7, 2(más o menos)=3, 3(excelente)=1
+const ratings=new Map();
+const WEIGHTS={undefined:4,1:7,2:3,3:1};
+const LABELS={1:"1 — Nada",2:"2 — Más o menos",3:"3 — Excelente"};
+const RBADGE={1:"rb-1",2:"rb-2",3:"rb-3"};
+const RBADGELABEL={1:"Nada",2:"Más o menos",3:"Excelente"};
 
+function key(c){return c.t+":"+c.q;}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function getFiltered(){return topicFilter==="Todos"?cards:cards.filter(c=>c.t===topicFilter);}
+
+function weightedNext(filtered,currentIdx){
+  const pool=[];
+  filtered.forEach((c,i)=>{
+    if(i===currentIdx)return;
+    const r=ratings.get(key(c));
+    const w=WEIGHTS[r]??4;
+    for(let j=0;j<w;j++)pool.push(i);
+  });
+  if(!pool.length)return currentIdx;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
 
 function buildFilters(){
 const d=document.getElementById("filters");
 d.innerHTML="";
-const topics=["Todos",...Object.keys(TOPICS)];
-topics.forEach(tp=>{
+["Todos",...Object.keys(TOPICS)].forEach(tp=>{
 const b=document.createElement("button");
 b.className="filter-btn"+(topicFilter===tp?" active":"");
 b.textContent=tp;
@@ -202,37 +242,53 @@ if(!filtered.length){area.innerHTML="<div class='empty'>No hay cartas para este 
 if(idx>=filtered.length)idx=0;
 const c=filtered[idx];
 const [bg,fg]=TOPICS[c.t];
-const isKnown=known.has(c.t+":"+c.q);
+const r=ratings.get(key(c));
+const badgeHTML=r?`<span class="rating-badge ${RBADGE[r]}">${RBADGELABEL[r]}</span>`:'<span style="font-size:11px;color:#bbb">Sin calificar</span>';
+const r1=r===1?" active-r":"",r2=r===2?" active-r":"",r3=r===3?" active-r":"";
 area.innerHTML=`<div class="scene" id="scene" onclick="doFlip()">
 <div class="card${flipped?" flipped":""}" id="card">
 <div class="face front">
-<div class="tag" style="background:${bg};color:${fg}">${c.t}</div>
+<div class="face-top">
+  <div class="tag" style="background:${bg};color:${fg}">${c.t}</div>
+  ${badgeHTML}
+</div>
 <div class="q-label">Pregunta</div>
 <div class="q-text">${c.q}</div>
 <div class="flip-hint">Clic para ver la respuesta →</div>
 </div>
-<div class="face back">
-<div class="tag" style="background:${bg};color:${fg}">${c.t}</div>
+<div class="face back" onclick="event.stopPropagation()">
+<div class="face-top">
+  <div class="tag" style="background:${bg};color:${fg}">${c.t}</div>
+  ${badgeHTML}
+</div>
 <div class="a-label">Respuesta</div>
 <div class="a-text">${c.a.replace(/\n/g,"<br>")}</div>
+<div class="rating-section">
+  <div class="rating-label">¿Cuánto la sabías?</div>
+  <div class="rating-btns">
+    <button class="r-btn r1${r1}" onclick="rate(1)">😰 1<br><span style="font-size:10px;font-weight:400">Nada</span></button>
+    <button class="r-btn r2${r2}" onclick="rate(2)">🤔 2<br><span style="font-size:10px;font-weight:400">Más o menos</span></button>
+    <button class="r-btn r3${r3}" onclick="rate(3)">✅ 3<br><span style="font-size:10px;font-weight:400">Excelente</span></button>
+  </div>
+</div>
 </div>
 </div></div>`;
-const mb=document.getElementById("btn-mark");
-mb.className="mark-btn"+(isKnown?" known":"");
-mb.textContent=isKnown?"✓ Sabida":"Marcar como sabida";
 }
 
 function renderStats(){
 const filtered=getFiltered();
-const knownIn=filtered.filter(c=>known.has(c.t+":"+c.q)).length;
-document.getElementById("st-showing").textContent=filtered.length;
-document.getElementById("st-known").textContent=knownIn;
-document.getElementById("st-remain").textContent=filtered.length-knownIn;
-const pct=filtered.length?Math.round(knownIn/filtered.length*100):0;
+const counts={0:0,1:0,2:0,3:0};
+filtered.forEach(c=>{const r=ratings.get(key(c))??0;counts[r]++;});
+document.getElementById("st-0").textContent=counts[0];
+document.getElementById("st-1").textContent=counts[1];
+document.getElementById("st-2").textContent=counts[2];
+document.getElementById("st-3").textContent=counts[3];
+document.getElementById("st-total").textContent=filtered.length;
+const pct=filtered.length?Math.round(counts[3]/filtered.length*100):0;
 document.getElementById("prog").style.width=pct+"%";
 document.getElementById("nav-ctr").textContent=filtered.length?(idx+1)+" / "+filtered.length:"0 / 0";
 document.getElementById("btn-prev").disabled=idx===0;
-document.getElementById("btn-next").disabled=idx>=filtered.length-1;
+document.getElementById("btn-next").disabled=filtered.length<=1;
 }
 
 function render(){buildFilters();renderCard();renderStats();}
@@ -243,21 +299,33 @@ const card=document.getElementById("card");
 if(card)card.classList.toggle("flipped",flipped);
 }
 
+function rate(n){
+const filtered=getFiltered();
+if(!filtered.length)return;
+const c=filtered[idx];
+ratings.set(key(c),n);
+// avanzar a siguiente carta con peso aleatorio
+const nextIdx=weightedNext(filtered,idx);
+idx=nextIdx;
+flipped=false;
+render();
+}
+
 document.getElementById("btn-prev").onclick=()=>{if(idx>0){idx--;flipped=false;render();}};
-document.getElementById("btn-next").onclick=()=>{const f=getFiltered();if(idx<f.length-1){idx++;flipped=false;render();}};
-document.getElementById("btn-mark").onclick=()=>{
-const f=getFiltered();if(!f.length)return;
-const c=f[idx];const k=c.t+":"+c.q;
-if(known.has(k))known.delete(k);else known.add(k);
-renderCard();renderStats();
+document.getElementById("btn-next").onclick=()=>{
+const f=getFiltered();
+const nextIdx=weightedNext(f,idx);
+idx=nextIdx;flipped=false;render();
 };
 document.getElementById("btn-shuffle").onclick=()=>{shuffle(cards);idx=0;flipped=false;render();};
 
 document.addEventListener("keydown",e=>{
-const f=getFiltered();
-if(e.key==="ArrowRight"){if(idx<f.length-1){idx++;flipped=false;render();}}
+if(e.key==="ArrowRight"){const f=getFiltered();idx=weightedNext(f,idx);flipped=false;render();}
 else if(e.key==="ArrowLeft"){if(idx>0){idx--;flipped=false;render();}}
 else if(e.key===" "){e.preventDefault();doFlip();}
+else if(e.key==="1"&&flipped)rate(1);
+else if(e.key==="2"&&flipped)rate(2);
+else if(e.key==="3"&&flipped)rate(3);
 });
 
 render();
