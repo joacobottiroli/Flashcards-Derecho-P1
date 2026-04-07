@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashcards — Derecho</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f8f7f4;color:#1a1a18;padding:1rem}
+h1{font-size:20px;font-weight:600;margin-bottom:4px}
+.sub{font-size:13px;color:#666;margin-bottom:1rem}
+.progress-bar{height:4px;background:#ddd;border-radius:2px;margin:10px 0 1rem;overflow:hidden}
+.progress-fill{height:100%;background:#BA7517;border-radius:2px;transition:width .4s}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem}
+.filter-btn{font-size:12px;padding:4px 10px;border:1px solid #ccc;border-radius:20px;background:#fff;color:#555;cursor:pointer;transition:all .15s}
+.filter-btn.active{background:#BA7517;border-color:#BA7517;color:#fff}
+.stats{display:flex;gap:16px;margin-bottom:1rem;font-size:13px;color:#666}
+.stats b{color:#1a1a18}
+.scene{perspective:900px;width:100%;min-height:240px;cursor:pointer;margin-bottom:1rem}
+.card{width:100%;min-height:240px;position:relative;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.4,0,.2,1)}
+.card.flipped{transform:rotateY(180deg)}
+.face{position:absolute;width:100%;min-height:240px;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid #e0ddd6;border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;background:#fff}
+.back{transform:rotateY(180deg)}
+.tag{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;width:fit-content;margin-bottom:.75rem}
+.q-label{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
+.q-text{font-size:17px;font-weight:500;color:#1a1a18;line-height:1.55;flex:1}
+.flip-hint{font-size:11px;color:#aaa;margin-top:auto;padding-top:.75rem}
+.a-label{font-size:11px;color:#BA7517;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;font-weight:600}
+.a-text{font-size:14px;color:#1a1a18;line-height:1.65;flex:1;white-space:pre-line}
+.nav{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:1rem}
+.nav-btn{padding:7px 18px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#1a1a18;font-size:13px;cursor:pointer}
+.nav-btn:hover{background:#f0efe8}
+.nav-btn:disabled{opacity:.3;cursor:default}
+.nav-ctr{font-size:13px;color:#666}
+.actions{display:flex;gap:8px;justify-content:flex-end}
+.mark-btn{padding:7px 16px;border:1px solid #ccc;border-radius:8px;font-size:13px;cursor:pointer;background:#fff;color:#555}
+.mark-btn.known{background:#EAF3DE;border-color:#639922;color:#27500A;font-weight:500}
+.shuffle-btn{padding:7px 14px;border:1px solid #ccc;border-radius:8px;font-size:13px;cursor:pointer;background:#fff;color:#555}
+.empty{text-align:center;padding:3rem;color:#999;font-size:14px}
+.kbd{font-size:11px;color:#bbb;text-align:center;margin-top:.75rem}
+</style>
+</head>
+<body>
+<h1>Flashcards — Derecho</h1>
+<div class="sub">Hacé clic en la carta para ver la respuesta · Teclas: ← → y Espacio</div>
+<div class="filters" id="filters"></div>
+<div class="stats">
+<span>Mostrando: <b id="st-showing">0</b></span>
+<span>Sabidas: <b id="st-known">0</b></span>
+<span>Restantes: <b id="st-remain">0</b></span>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+<div id="card-area"></div>
+<div class="nav">
+<button class="nav-btn" id="btn-prev">← Anterior</button>
+<span class="nav-ctr" id="nav-ctr"></span>
+<button class="nav-btn" id="btn-next">Siguiente →</button>
+</div>
+<div class="actions">
+<button class="mark-btn" id="btn-mark">Marcar como sabida</button>
+<button class="shuffle-btn" id="btn-shuffle">Mezclar</button>
+</div>
+<div class="kbd">Flechas para navegar · Espacio para voltear</div>
+
+<script>
+const TOPICS={
+"Derecho General":["#E6F1FB","#185FA5"],
+"Der. Constitucional":["#EAF3DE","#3B6D11"],
+"Persona":["#EEEDFE","#534AB7"],
+"Obligaciones":["#FAEEDA","#854F0B"],
+"Resp. Civil":["#FCEBEB","#A32D2D"],
+"Der. Com. Historia":["#E1F5EE","#0F6E56"],
+"Fondo de Comercio":["#FFF3E0","#E65100"],
+"Concursos":["#FBE9E7","#BF360C"],
+"Der. Comercial":["#F5F5F5","#424242"],
+"Marcas":["#F3E5F5","#7B1FA2"],
+"Patentes":["#E0F7FA","#00695C"],
+"Prop. Intelectual":["#FFF8E1","#F57F17"]
+};
+
+const ALL=[
+{t:"Derecho General",q:"¿Qué es el Derecho?",a:"Conjunto de normas de conducta impuestas por el Estado con carácter obligatorio y conforme a criterios de justicia. Define límites, atribuye poderes y garantiza soluciones pacíficas a los conflictos sociales."},
+{t:"Derecho General",q:"Definición según Borda",a:"Conjunto de normas de conducta humana establecidas por el Estado, obligatorias y orientadas a la justicia."},
+{t:"Derecho General",q:"Definición según Salvat",a:"Reglas que rigen relaciones sociales y cuya observancia puede imponerse coercitivamente."},
+{t:"Derecho General",q:"¿Cuáles son las fuentes del Derecho?",a:"Ley, costumbre, jurisprudencia y doctrina. Son los hechos, instituciones y procedimientos que originan normas jurídicas."},
+{t:"Derecho General",q:"¿Qué es la costumbre como fuente del Derecho?",a:"Repetición espontánea y sostenida de actos que adquieren fuerza normativa. Según el Art. 1 CCCN, los usos y costumbres son vinculantes cuando la ley o las partes se remiten a ellos, o cuando la situación no está regulada, siempre que no contravengan el ordenamiento."},
+{t:"Derecho General",q:"¿Qué es la jurisprudencia?",a:"Conjunto de decisiones reiteradas de los tribunales que constituye una pauta práctica de interpretación. En Argentina, los jueces no están estrictamente vinculados por precedentes. Su función es uniformar criterios y aportar seguridad jurídica."},
+{t:"Derecho General",q:"¿Qué es la doctrina?",a:"Conjunto de opiniones y estudios de autores acreditados que elaboran teorías y soluciones jurídicas. No es fuente obligatoria pero orienta a jueces y legisladores. No impone obligaciones por sí misma."},
+{t:"Derecho General",q:"Pirámide normativa de Kelsen",a:"1. Constitución Nacional y Tratados con jerarquía constitucional (Art. 75 inc. 22)\n2. Tratados internacionales sin jerarquía constitucional\n3. Leyes nacionales\n4. Decretos del Poder Ejecutivo\n5. Resoluciones y reglamentos administrativos\n6. Contratos"},
+{t:"Derecho General",q:"Características de la Ley",a:"Obligatoriedad (impone conductas y sanciones), Generalidad (reglas aplicables a ámbitos y sujetos amplios), Estabilidad (persiste en el tiempo salvo reforma legítima)."},
+{t:"Derecho General",q:"Ramas del Derecho Público",a:"Constitucional, Administrativo, Penal, Procesal e Internacional Público."},
+{t:"Derecho General",q:"Ramas del Derecho Privado",a:"Civil, Comercial, Laboral, Minero, Agrario o Rural e Internacional Privado."},
+{t:"Der. Constitucional",q:"¿Qué es el Derecho Constitucional?",a:"Rama del derecho público que estudia la organización política del Estado y su funcionamiento: la estructuración de los poderes, la delimitación de facultades y el reconocimiento de derechos personales y sociales esenciales."},
+{t:"Der. Constitucional",q:"¿Qué es el Constitucionalismo?",a:"Proceso político-jurídico que tuvo por objeto establecer en cada Estado un documento legal (Constitución) con supremacía jurídica sobre el resto de las normas. Es el sometimiento del poder político al derecho."},
+{t:"Der. Constitucional",q:"Características del Constitucionalismo Clásico",a:"Surgió con las Revoluciones Norteamericana (1776) y Francesa (1789).\n- División de poderes (PL, PE, PJ)\n- Constitución escrita y rígida\n- Limitación del poder del Estado\n- Reconocimiento de derechos individuales (propiedad, libertad, igualdad)\n- Eliminación del poder divino de los reyes"},
+{t:"Der. Constitucional",q:"¿Qué es el Constitucionalismo Social?",a:"Etapa donde el Estado abandona su rol pasivo y pasa a intervenir activamente. Surge ante la desigualdad económica de fines del siglo XIX. El Estado fomenta igualdad de oportunidades y protege al sector más débil. Reconoce los 'derechos sociales' (trabajo, salud, vivienda)."},
+{t:"Der. Constitucional",q:"¿Cuándo fue promulgada la CN?",a:"Sancionada el 1° de mayo de 1853, promulgada el 25 de mayo de 1853 y jurada el 9 de julio de 1853. La versión vigente (reforma 1994) tiene Preámbulo, 129 artículos y 17 Disposiciones Transitorias."},
+{t:"Der. Constitucional",q:"¿Qué es la Supremacía Constitucional?",a:"Doctrina según la cual las normas de la Constitución Nacional prevalecen sobre todas las demás normas y actos estatales y privados. Toda norma que la contradiga se declara 'inconstitucional' y no produce efectos."},
+{t:"Der. Constitucional",q:"Requisitos del Control de Constitucionalidad en Argentina",a:"1. Causa judicial (siempre dentro de un proceso judicial)\n2. Petición de parte (el juez no puede ejercerlo de oficio)\n3. Interés legítimo (solo quien ve amenazados sus derechos puede pedirlo)"},
+{t:"Der. Constitucional",q:"Art. 14 CN — Derechos de los habitantes",a:"Trabajar y ejercer industria lícita; navegar y comerciar; peticionar a las autoridades; entrar, permanecer, transitar y salir del territorio; publicar ideas sin censura previa; usar y disponer de su propiedad; asociarse con fines útiles; profesar su culto; enseñar y aprender."},
+{t:"Der. Constitucional",q:"Art. 17 CN — Propiedad e inventores",a:"La propiedad es inviolable. Nadie puede ser privado de ella sino en virtud de sentencia fundada en ley. Todo autor o inventor es propietario exclusivo de su obra por el término que le acuerde la ley. La confiscación queda borrada del Código Penal."},
+{t:"Der. Constitucional",q:"Art. 18 CN — Garantías procesales",a:"Nadie puede ser penado sin juicio previo fundado en ley anterior al hecho. Nadie puede ser obligado a declarar contra sí mismo. Inviolabilidad de la defensa en juicio, del domicilio, de la correspondencia y papeles privados. Abolición de la pena de muerte por causas políticas."},
+{t:"Der. Constitucional",q:"Art. 19 CN — Acciones privadas",a:"Las acciones privadas de los hombres que no ofendan al orden y moral pública ni perjudiquen a tercero, están solo reservadas a Dios y exentas de la autoridad de los magistrados. Ningún habitante será obligado a hacer lo que no manda la ley, ni privado de lo que ella no prohíbe."},
+{t:"Der. Constitucional",q:"Art. 43 CN — Amparo y hábeas corpus",a:"Acción expedita y rápida contra actos u omisiones que lesionen derechos constitucionales. Incluye hábeas data (conocer datos en registros) y hábeas corpus (libertad física). El juez puede declarar la inconstitucionalidad de la norma lesiva."},
+{t:"Der. Constitucional",q:"Estructura del Gobierno Federal",a:"Poder Ejecutivo: Presidente y Vicepresidente (arts. 87-99).\nPoder Legislativo: Congreso bicameral (Diputados y Senadores).\nPoder Judicial: Corte Suprema de Justicia y tribunales inferiores.\nMinisterio Público."},
+{t:"Persona",q:"¿Qué es una persona para el Derecho?",a:"Todo ente susceptible de adquirir derechos y contraer obligaciones. La condición de humano es el único requisito para ser persona (criterio actual). Pueden ser personas humanas o jurídicas."},
+{t:"Persona",q:"Clasificación de personas jurídicas",a:"Públicas: Estado Nacional, Provincias, CABA, Municipios, entidades autárquicas.\nPrivadas: Sociedades, Asociaciones civiles, Simples asociaciones, Iglesias, Comunidades religiosas, Mutuales, Cooperativas, Consorcio de Propiedad Horizontal."},
+{t:"Persona",q:"¿Qué es la capacidad de derecho? (art. 22 CCCN)",a:"Aptitud para ser titular de derechos y deberes jurídicos. Toda persona humana la goza. La ley puede privar o limitar esta capacidad respecto de hechos, simples actos o actos jurídicos determinados."},
+{t:"Persona",q:"¿Qué es la capacidad de ejercicio? (art. 23 CCCN)",a:"Aptitud para ejercer por sí misma los derechos. Toda persona humana puede ejercerlos salvo las limitaciones expresamente previstas en el CCCN o en una sentencia judicial."},
+{t:"Persona",q:"Incapaces de ejercicio según el CCCN",a:"1. La persona por nacer\n2. La persona que no cuenta con la edad y grado de madurez suficiente\n3. La persona declarada incapaz por sentencia judicial en la extensión dispuesta en esa decisión"},
+{t:"Persona",q:"Clasificación de menores de edad en el CCCN",a:"Niños: menores de 13 años.\nAdolescentes: de 13 a 18 años.\nEl CCCN adopta el criterio de capacidad progresiva, a diferencia del Cód. Civil anterior (impúberes <14, púberes >14)."},
+{t:"Persona",q:"Restricciones a la capacidad en el CCCN (art. 32)",a:"Capacidad restringida: el juez puede restringir la capacidad para determinados actos de mayores de 13 años con adicción o alteración mental grave que pueda causarles un daño.\nIncapacidad: cuando la persona está absolutamente imposibilitada de interaccionar con su entorno y expresar su voluntad."},
+{t:"Obligaciones",q:"¿Qué es una obligación?",a:"Relación jurídica en virtud de la cual el acreedor tiene el derecho a exigir del deudor una prestación destinada a satisfacer un interés lícito y, ante el incumplimiento, a obtener forzadamente la satisfacción de dicho interés."},
+{t:"Obligaciones",q:"Tipos de obligaciones",a:"De dar: entrega de una cosa material (ej: compraventa).\nDe hacer: ejecución de un acto u obra (ej: contrato con arquitecto).\nDe no hacer: abstención de realizar determinado acto (ej: contrato de confidencialidad)."},
+{t:"Obligaciones",q:"Elementos básicos de la obligación",a:"Sujeto: acreedor (quien puede exigir) y deudor (quien debe cumplir).\nObjeto: la prestación en sí misma.\nCausa: fuente que origina la obligación (contrato, ley, responsabilidad civil, etc.)."},
+{t:"Obligaciones",q:"¿Qué es la confusión como modo de extinción?",a:"Se extingue la obligación cuando las calidades de acreedor y de deudor se reúnen en una misma persona y en un mismo patrimonio (arts. 931 y 932 CCCN)."},
+{t:"Obligaciones",q:"¿Qué es la transacción?",a:"Contrato por el cual las partes, para evitar un litigio o ponerle fin, haciéndose concesiones recíprocas, extinguen obligaciones dudosas o litigiosas (arts. 1641 a 1648 CCCN)."},
+{t:"Obligaciones",q:"¿Qué es la dación en pago?",a:"La obligación se extingue cuando el acreedor voluntariamente acepta en pago una prestación diversa de la adeudada (art. 942 CCCN)."},
+{t:"Resp. Civil",q:"Funciones de la Responsabilidad Civil",a:"1. Preventiva (art. 1710): evitar o disminuir el daño.\n2. Punitiva/sancionatoria (art. 1714): castigo ejemplar.\n3. Resarcitoria: reparación del daño causado."},
+{t:"Resp. Civil",q:"Función preventiva: requisitos",a:"Antijuridicidad + Relación causal.\nNota: la imputabilidad NO es necesaria para la función preventiva. El objetivo es evitar o disminuir el daño antes de que ocurra."},
+{t:"Resp. Civil",q:"Factores de atribución",a:"Objetiva: se corta el nexo causal por culpa de la víctima o excepción de punto anterior.\nSubjetiva: dolo (intención de causar daño) o culpa (negligencia, imprudencia, impericia). La culpa puede ser atenuada (art. 1742); existe dispensa anticipada (art. 1743)."},
+{t:"Resp. Civil",q:"¿Qué es la antijuridicidad?",a:"Acto u omisión que va en contra del ordenamiento jurídico. Es uno de los presupuestos de la responsabilidad civil en la función resarcitoria."},
+{t:"Resp. Civil",q:"Características del daño resarcible",a:"Cierto (no hipotético), actual o futuro, subsistente (no haya sido reparado), propio (que afecte al reclamante)."},
+{t:"Resp. Civil",q:"Tipos de daño",a:"Psicológico, físico, material (patrimonial) y moral (extrapatrimonial).\nLa relación de causalidad puede ser física (en los hechos) o jurídica (atribución legal del daño)."},
+{t:"Der. Com. Historia",q:"¿Qué es el Derecho Comercial?",a:"Conjunto de normas jurídicas que regula la materia comercial: sus negocios, objetos y sujetos. El comercio es, por esencia, intermediación en los cambios."},
+{t:"Der. Com. Historia",q:"¿Dónde surgió el Derecho Comercial como rama autónoma?",a:"En la Edad Media (Alta Edad Media y vísperas del Renacimiento), impulsado por las ciudades italianas: Génova, Venecia, Pisa y Florencia. Surgió por la necesidad de reglamentación especial para los comerciantes, con jueces especiales (jurisdicción consular)."},
+{t:"Der. Com. Historia",q:"¿Qué es la lex mercatoria?",a:"Ordenamiento para regir las relaciones entre comerciantes de modo uniforme, surgido en las ferias medievales. Se formó por los usos y costumbres de los comerciantes, aplicado independientemente de la ley del lugar y la ley personal de los partícipes."},
+{t:"Der. Com. Historia",q:"¿Por qué surge el derecho societario?",a:"Porque los riesgos del comercio medieval eran enormes y no había patrimonio individual que pudiera correrlos solo. Los comerciantes unieron capitales tomando la idea de 'persona jurídica', dando lugar al derecho societario."},
+{t:"Der. Com. Historia",q:"Origen del término 'bancarrota'",a:"En la Edad Media, los ricos comerciantes tenían bancas como símbolo de poder. El fallido (quien no cumplía sus obligaciones) era expulsado del clan: su banca era rota (bancarrota)."},
+{t:"Der. Com. Historia",q:"Primer Código de Comercio moderno",a:"El Código de Comercio francés de 1807 fue la fuente de la codificación mercantil continental. Se inspiró en las ordenanzas de Colbert de Luis XIV (1673 terrestre, 1681 marítima)."},
+{t:"Der. Com. Historia",q:"Código de Comercio argentino",a:"Redactado por Vélez Sarsfield y Acevedo. Fue el Código de Comercio del Estado de Buenos Aires de 1859, devenido Código Nacional de Comercio en 1862 tras la reincorporación de Buenos Aires. Se inspiró en el Código Español de 1829."},
+{t:"Fondo de Comercio",q:"¿Qué es el fondo de comercio? (Ley 11.867)",a:"Organización comercial de ciertos elementos necesarios (bienes muebles, derechos, intangibles) para la explotación productiva que goza de cierta continuidad e identificación como unidad. La jurisprudencia lo define como 'un organismo económico viviente'."},
+{t:"Fondo de Comercio",q:"Elementos constitutivos (art. 1 LTFC)",a:"Instalaciones, mercaderías, nombre y enseña comercial, clientela, derecho al local, patentes de invención, marcas de fábrica, dibujos y modelos industriales, distinciones honoríficas y demás derechos de propiedad comercial, industrial o artística. (Lista enunciativa)"},
+{t:"Fondo de Comercio",q:"Consecuencia de omitir el trámite de transferencia",a:"No genera invalidez sino INOPONIBILIDAD frente a terceros. Además, hace responsables solidariamente al comprador, vendedor, martillero o escribano por el importe de los créditos impagos, hasta el monto del precio vendido (art. 11 LTFC)."},
+{t:"Fondo de Comercio",q:"Procedimiento de transferencia del fondo de comercio",a:"1. Publicar en Boletín Oficial y diario local por 5 días\n2. Entregar lista de acreedores (nombres, domicilios, montos)\n3. Esperar 10 días desde la última publicación\n4. Si hay oposición: retener y depositar montos por 20 días para embargo judicial\n5. Otorgar el documento de venta\n6. Inscribir en Registro Público dentro de 10 días"},
+{t:"Fondo de Comercio",q:"Derecho de oposición de los acreedores (art. 4 LTFC)",a:"Los acreedores afectados pueden notificar su oposición al comprador (dentro de los 10 días de la última publicación), reclamando la retención del importe de sus créditos y su depósito en banco. Pueden ejercerlo tanto acreedores incluidos en la lista como los omitidos que presenten sus títulos."},
+{t:"Fondo de Comercio",q:"Diferencia entre clientela y valor llave",a:"Clientela: conjunto de compradores potenciales (habituales u ocasionales) del establecimiento.\nValor llave: aptitud del fondo para generar ganancias (elemento funcional). Considera la ubicación, antigüedad, organización, clientela, marca, etc."},
+{t:"Fondo de Comercio",q:"Solidaridad laboral en la transferencia (art. 228 LCT)",a:"Transmitente y adquirente son solidariamente responsables por las obligaciones laborales existentes a la época de la transmisión, incluyendo las ya extintas con anterioridad (según plenario 'Baglieri')."},
+{t:"Fondo de Comercio",q:"Régimen fiscal — obligación ante la AFIP",a:"El adquirente responde solidariamente por deudas fiscales. La responsabilidad caduca a los 3 meses si con 15 días de antelación se denunció la transferencia a la AFIP. El trámite de la Ley 11.867 no produce efectos respecto de acreencias fiscales sin la notificación especial a la AFIP (art. 8, Ley 11.683)."},
+{t:"Concursos",q:"¿Por qué se llama 'concurso'?",a:"Porque concurren TODOS los acreedores del deudor, TODAS sus relaciones jurídicas (bienes, créditos, deudas) y TODOS los juicios patrimoniales del deudor (fuero de atracción).\n\nExcepciones: ciertos acreedores tienen tratamiento especial y ciertos juicios quedan excluidos del fuero de atracción."},
+{t:"Concursos",q:"Efectos del concurso preventivo",a:"- El deudor continúa su actividad comercial normal\n- Suspensión del devengamiento de intereses desde la presentación\n- Caducidad de todos los plazos de las deudas\n- Actos de disposición sujetos a autorización judicial\n- Control a través del síndico concursal\n- El acuerdo es oponible a todos los acreedores anteriores al concurso"},
+{t:"Concursos",q:"Efectos de la quiebra",a:"- El deudor queda inhabilitado para continuar su actividad comercial\n- Si es sociedad: se disuelve\n- No puede administrar ni disponer de sus bienes\n- Suspensión del devengamiento de intereses\n- Caducidad de todos los plazos\n- Puede ejercer actividad profesional o ser empleado"},
+{t:"Concursos",q:"¿Qué es la verificación de créditos?",a:"Proceso por el cual los acreedores anteriores a la sentencia de apertura presentan sus créditos ante el síndico, acreditando que son acreedores, el monto y la documentación. El juez resuelve incluyéndolos o no. Si es declarado inadmisible, puede iniciar un incidente de revisión."},
+{t:"Concursos",q:"Bienes y juicios excluidos del concurso",a:"Bienes excluidos: bienes inembargables, indemnizaciones por daño moral.\nJuicios excluidos del fuero de atracción: juicios de familia, hipotecarios, de expropiación y laborales."},
+{t:"Concursos",q:"Hechos reveladores de insolvencia",a:"Mora en el cumplimiento de obligaciones, clausura del establecimiento, reconocimiento judicial o extrajudicial de la cesación de pagos, venta a precio vil, dación en pago, entre otros."},
+{t:"Der. Comercial",q:"Concepto de empresa",a:"Organización de fuerzas económicas (capital y trabajo) conforme a un plan del empresario para lograr resultados económicos. Es un conjunto de bienes de distinta naturaleza que sirve de sostén para la actividad del empresario."},
+{t:"Der. Comercial",q:"¿Qué es un seguro?",a:"Contrato (póliza) en el cual la empresa aseguradora se compromete a pagar una indemnización si la persona sufre daños en su persona o bienes. La contraprestación que recibe la aseguradora se llama prima. La denuncia del siniestro debe hacerse dentro de las 72 hs. (art. 46 Ley de Seguros)."},
+{t:"Der. Comercial",q:"¿Qué es el cheque?",a:"Título de crédito mediante el cual una persona ordena a su banco pagar una cantidad de dinero a un tercero.\n\nTipos: cheque común (a la vista) y cheque de pago diferido (fecha futura).\nTransmisión: por entrega, endoso o cesión de créditos."},
+{t:"Der. Comercial",q:"¿Qué son las obligaciones negociables?",a:"Títulos de deuda privada que incorporan un derecho de crédito del inversor (obligacionista) respecto de la empresa emisora. El inversor tiene derecho a la restitución del capital más los intereses convenidos en un período determinado."},
+{t:"Der. Comercial",q:"¿Qué es la Bolsa de Valores?",a:"Mercado donde se ponen en contacto empresas (que necesitan capital y emiten acciones, bonos, etc.) y ahorradores (que buscan rentabilidad). Permite también un mercado secundario donde se negocian títulos ya emitidos. Su desempeño se mide a través de índices."},
+{t:"Marcas",q:"¿Qué es una marca? (Ley 22.362)",a:"Signo que distingue un producto de otro o un servicio de otro. La función esencial de la marca es DISTINGUIR productos o servicios en el mercado."},
+{t:"Marcas",q:"Sistema de adquisición del derecho de marca en Argentina",a:"Sistema ATRIBUTIVO: el derecho se adquiere con el REGISTRO, no con el simple uso (art. 4, Ley 22.362). El registro atribuye el derecho al titular."},
+{t:"Marcas",q:"Duración y renovación de la marca registrada",a:"10 años renovables (art. 5, Ley 22.362). Se puede renovar indefinidamente."},
+{t:"Marcas",q:"¿Qué puede registrarse como marca? (art. 1)",a:"Palabras (con o sin contenido conceptual), dibujos, emblemas, monogramas, imágenes, bandas, combinaciones de colores en lugar determinado, envoltorios, envases, frases publicitarias, relieves con capacidad distintiva, y todo otro signo con capacidad distintiva. (Enumeración enunciativa)"},
+{t:"Marcas",q:"¿Qué NO se considera marca? (art. 2)",a:"a) Designaciones necesarias o habituales del producto o descriptivas de su naturaleza/cualidades.\nb) Palabras que pasaron al uso general antes de su solicitud.\nc) La forma que se dé a los productos.\nd) El color natural o intrínseco de los productos o un solo color aplicado sobre ellos."},
+{t:"Marcas",q:"¿Qué no puede ser registrado? (art. 3)",a:"Marca idéntica a una ya registrada para los mismos productos/servicios; marcas similares confusamente; denominaciones de origen; marcas que induzcan a error; signos contrarios a la moral; símbolos de la Nación, provincias, municipios u organismos internacionales; nombre o retrato de persona sin consentimiento."},
+{t:"Marcas",q:"Clasificación de las marcas",a:"Por naturaleza: nominativa (se lee/pronuncia), figurativa (no se lee), mixta.\nPor registro: registrada vs. de hecho.\nPor objeto: de producto vs. de servicio.\nPor notoriedad: notoria vs. no notoria."},
+{t:"Marcas",q:"Trámite de registro ante el INPI",a:"1. Elección del nombre (distintivo, original)\n2. Búsqueda ante INPI para ver disponibilidad\n3. Inicio de trámite con formulario y pago de tasa\n4. Publicación por 1 día en el Boletín de Marcas\n5. 30 días para oposición\n6. 60 días para finalizar el trámite"},
+{t:"Marcas",q:"Normas que regulan marcas en Argentina",a:"1. Ley 22.362 (Marcas y Designaciones)\n2. Decreto 558/1981 (reglamentario)\n3. Convenio de París (ley 17.011)\n4. Acuerdo ADPIC de la OMC (ley 24.425)\n5. Resoluciones del INPI\n6. Jurisprudencia de la Justicia Federal"},
+{t:"Patentes",q:"Requisitos de patentabilidad (art. 4, Ley 24.481)",a:"1. Novedad absoluta (no comprendida en el estado de la técnica)\n2. Actividad inventiva (resultados no evidentes del estado de la técnica para persona versada en la materia)\n3. Aplicación industrial (incluyendo agricultura, ganadería, servicios, etc.)"},
+{t:"Patentes",q:"¿Qué es el 'estado de la técnica'?",a:"Conjunto de conocimientos técnicos hechos públicos antes de la fecha de presentación de la solicitud de patente, mediante descripción oral o escrita, explotación o cualquier otro medio de difusión, en el país o en el extranjero."},
+{t:"Patentes",q:"¿Qué no se considera invención? (art. 6)",a:"Descubrimientos, teorías científicas y métodos matemáticos; obras literarias o artísticas; planes, reglas y métodos para actividades intelectuales, juegos o actividades económico-comerciales; programas de computación; formas de presentación de información."},
+{t:"Patentes",q:"¿Qué no puede patentarse? (art. 7)",a:"Invenciones que afecten el orden público, moralidad, salud o medio ambiente; todo el material biológico y genético preexistente en la naturaleza; métodos de tratamiento quirúrgico, terapéutico o de diagnóstico; yuxtaposición de invenciones conocidas sin resultado industrial no obvio."},
+{t:"Patentes",q:"Duración de la patente de invención",a:"20 años improrrogables contados desde la fecha de presentación de la solicitud (art. 35, Ley 24.481)."},
+{t:"Patentes",q:"Invenciones en la relación laboral (art. 10)",a:"Las invenciones del trabajador en cumplimiento del contrato con objeto inventivo pertenecen al EMPLEADOR. El trabajador tiene derecho a remuneración suplementaria si su aporte excede lo esperado en el contrato. Las invenciones sin relación con su función pertenecen al autor. Es nula la renuncia anticipada a estos derechos."},
+{t:"Patentes",q:"Licencias obligatorias (art. 42)",a:"Cuando el titular niega licencias en términos razonables durante más de 150 días desde la solicitud, el INPI puede permitir otros usos de la patente sin autorización del titular."},
+{t:"Patentes",q:"¿Qué es un modelo de utilidad? Vigencia.",a:"Nueva disposición o forma en objetos conocidos que mejore su utilización práctica. Confiere al creador el derecho exclusivo de explotación. No puede otorgarse dentro del campo de protección de una patente vigente.\n\nVigencia: 10 años improrrogables desde la presentación de la solicitud."},
+{t:"Prop. Intelectual",q:"¿Cuáles son las ramas de los Derechos Intelectuales?",a:"1. Propiedad intelectual o artística — derechos de autor (Ley 11.723)\n2. Derecho de marcas (Ley 22.362)\n3. Patentes y modelos de utilidad (Ley 24.481)"},
+{t:"Prop. Intelectual",q:"¿Qué se protege con el derecho de autor? (art. 1 Ley 11.723)",a:"La OBRA: la expresión de las ideas (no las ideas en sí mismas). Incluye escritos de toda naturaleza, programas de computación (fuente y objeto), compilaciones, obras dramáticas, composiciones musicales, obras cinematográficas, etc.\n\nIDEAS: NO se protegen. Exteriorización original: SÍ."},
+{t:"Prop. Intelectual",q:"¿Quién es el 'autor'?",a:"Quien crea la obra (titular del derecho). También: sus herederos; traductores o adaptadores con permiso; empleadores cuyos dependientes produjeron un programa de computación en función laboral; editor de obras anónimas o seudónimas."},
+{t:"Prop. Intelectual",q:"Duración del derecho de autor",a:"Toda la vida del autor + 70 años desde su muerte (a partir del 1° de enero del año siguiente).\nObras colectivas: 70 años desde la muerte del último colaborador.\nFotografías: 20 años desde la primera publicación.\nObras cinematográficas: 50 años desde el fallecimiento del último colaborador."},
+{t:"Prop. Intelectual",q:"¿Qué es el Dominio Público?",a:"Una vez vencido el plazo del derecho de autor, la obra puede ser utilizada por cualquiera. El Dominio Público NO implica gratuidad: el Estado puede cobrar cánones (ej: SADAIC para piezas musicales, ARGENTORES para obras dramáticas)."},
+{t:"Prop. Intelectual",q:"Derechos patrimoniales del autor",a:"Disponer, publicar, reproducir y transformar la obra. Son transmisibles (pueden cederse) y de duración limitada."},
+{t:"Prop. Intelectual",q:"Derechos extrapatrimoniales (morales) del autor",a:"Paternidad: reconocimiento de la autoría.\nIntegridad: protección de la obra frente a modificaciones no autorizadas.\nDivulgación: decisión de cuándo y cómo publicar.\n\nSon inalienables."},
+{t:"Prop. Intelectual",q:"Naturaleza jurídica del Derecho de Propiedad Intelectual",a:"Es un derecho de propiedad (Art. 2506 CC), pero a diferencia del dominio ordinario que es perpetuo (art. 2510 CC), el DPI es TEMPORARIO. Esta es su principal diferencia con la propiedad común."},
+{t:"Prop. Intelectual",q:"Normas que regulan derechos de autor en Argentina",a:"1. Constitución Nacional (art. 17)\n2. Ley 11.723 (Propiedad Intelectual)\n3. Leyes 25.036 (software) y 24.870 (modificatorias)\n4. Convenio de Berna (ley 25.140)\n5. Acuerdo ADPIC de la OMC (ley 24.425)\n6. Jurisprudencia de la Justicia Federal"}
+];
+
+let cards=[...ALL];
+let idx=0,flipped=false,known=new Set(),topicFilter="Todos";
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function getFiltered(){return topicFilter==="Todos"?cards:cards.filter(c=>c.t===topicFilter);}
+
+function buildFilters(){
+const d=document.getElementById("filters");
+d.innerHTML="";
+const topics=["Todos",...Object.keys(TOPICS)];
+topics.forEach(tp=>{
+const b=document.createElement("button");
+b.className="filter-btn"+(topicFilter===tp?" active":"");
+b.textContent=tp;
+b.onclick=()=>{topicFilter=tp;idx=0;flipped=false;render();};
+d.appendChild(b);
+});
+}
+
+function renderCard(){
+const filtered=getFiltered();
+const area=document.getElementById("card-area");
+if(!filtered.length){area.innerHTML="<div class='empty'>No hay cartas para este filtro.</div>";return;}
+if(idx>=filtered.length)idx=0;
+const c=filtered[idx];
+const [bg,fg]=TOPICS[c.t];
+const isKnown=known.has(c.t+":"+c.q);
+area.innerHTML=`<div class="scene" id="scene" onclick="doFlip()">
+<div class="card${flipped?" flipped":""}" id="card">
+<div class="face front">
+<div class="tag" style="background:${bg};color:${fg}">${c.t}</div>
+<div class="q-label">Pregunta</div>
+<div class="q-text">${c.q}</div>
+<div class="flip-hint">Clic para ver la respuesta →</div>
+</div>
+<div class="face back">
+<div class="tag" style="background:${bg};color:${fg}">${c.t}</div>
+<div class="a-label">Respuesta</div>
+<div class="a-text">${c.a.replace(/\n/g,"<br>")}</div>
+</div>
+</div></div>`;
+const mb=document.getElementById("btn-mark");
+mb.className="mark-btn"+(isKnown?" known":"");
+mb.textContent=isKnown?"✓ Sabida":"Marcar como sabida";
+}
+
+function renderStats(){
+const filtered=getFiltered();
+const knownIn=filtered.filter(c=>known.has(c.t+":"+c.q)).length;
+document.getElementById("st-showing").textContent=filtered.length;
+document.getElementById("st-known").textContent=knownIn;
+document.getElementById("st-remain").textContent=filtered.length-knownIn;
+const pct=filtered.length?Math.round(knownIn/filtered.length*100):0;
+document.getElementById("prog").style.width=pct+"%";
+document.getElementById("nav-ctr").textContent=filtered.length?(idx+1)+" / "+filtered.length:"0 / 0";
+document.getElementById("btn-prev").disabled=idx===0;
+document.getElementById("btn-next").disabled=idx>=filtered.length-1;
+}
+
+function render(){buildFilters();renderCard();renderStats();}
+
+function doFlip(){
+flipped=!flipped;
+const card=document.getElementById("card");
+if(card)card.classList.toggle("flipped",flipped);
+}
+
+document.getElementById("btn-prev").onclick=()=>{if(idx>0){idx--;flipped=false;render();}};
+document.getElementById("btn-next").onclick=()=>{const f=getFiltered();if(idx<f.length-1){idx++;flipped=false;render();}};
+document.getElementById("btn-mark").onclick=()=>{
+const f=getFiltered();if(!f.length)return;
+const c=f[idx];const k=c.t+":"+c.q;
+if(known.has(k))known.delete(k);else known.add(k);
+renderCard();renderStats();
+};
+document.getElementById("btn-shuffle").onclick=()=>{shuffle(cards);idx=0;flipped=false;render();};
+
+document.addEventListener("keydown",e=>{
+const f=getFiltered();
+if(e.key==="ArrowRight"){if(idx<f.length-1){idx++;flipped=false;render();}}
+else if(e.key==="ArrowLeft"){if(idx>0){idx--;flipped=false;render();}}
+else if(e.key===" "){e.preventDefault();doFlip();}
+});
+
+render();
+</script>
+</body>
+</html>
